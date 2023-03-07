@@ -128,7 +128,6 @@ graph LR
     C --> |Callback| D[Server]
     C --> |Info| D    
 ```
----
 
 
 Now, you will insert inside that function an If/Else Statement to check if the player wants to transform or the opposite.
