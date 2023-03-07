@@ -8,7 +8,7 @@ theme:
       - navigation.sections
       - toc.integrate
       - navigation.indexes
-
+      
 markdown_extensions:
 
   # Python Markdown
