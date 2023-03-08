@@ -59,6 +59,7 @@ It should be something like this:
 After doing everything above you will need to open the **Skillz** Script, it may be confusing at the start but it's easy to learn, first of all you will:
 
 * Try to find the Modes table.
+
 ```lua title="Skillz"
 local module = {
     ---Ignore
@@ -112,9 +113,9 @@ end
 Do you see the parameters, right? They are: ``player, toggle, data, modeNumber, animation, flying``, i'll explain what theses are:
 
 * **Player**, player is the player instance.
-* **toggle**, toggle is when player pressed the button to transform, if the player wants to transform, it will be **True**, if the player wants to untransform, it will be **False**
+* **Toggle**, toggle is when player pressed the button to transform, if the player wants to transform, it will be **True**, if the player wants to untransform, it will be **False**
 * **Data**, Data is basically the character table sent from the client (idk why they named it as Data)
-* **ModeNumber**, Useless thing, you wont use, just ignore it.
+* **ModeNumber**, Used to detect the transformation on multiplier module.
 * **Animation**, the usual transforming animation, nothing else.
 * **Flying**, it will tells the script if the player is flying or not.
 
@@ -138,6 +139,7 @@ modes["MODOSMODULO FORM NAME HERE"] = function(player, toggle, data, modeNumber,
         -- Here we will place the entire transformation script (True)
     else
         -- Here we will place the entire untransformation script (False)
+    end -- Finish line of the toggle If/Else statement
 end
 ```
 
@@ -151,6 +153,7 @@ modes["MODOSMODULO FORM NAME HERE"] = function(player, toggle, data, modeNumber,
         end
 
     else
+    end
 end
 
 ```
@@ -168,7 +171,174 @@ modes["MODOSMODULO FORM NAME HERE"] = function(player, toggle, data, modeNumber,
             )
         end
     else
+    end
 end
 ```
 
-As you can see, we added some new things, basically task.spawn spawns a function that doesn't yields the entire script, i'd recommend you taking a look at here: 
+As you can see, we added some new things, basically task.spawn spawns a function that doesn't yields the entire script, i'd recommend you taking a look at here: [Task.spawn](https://create.roblox.com/docs/reference/engine/libraries/task#spawn)
+
+
+Now we are going to set an aura to the player using the ``bindAura()`` function and ``bindAuraSound()``
+
+theses two functions requires three parameters:
+
+```lua
+bindAura(AuraAsset, UpperTorso, Toggle)
+bindAuraSound(AuraSoundAsset, UpperTorso, Toggle)
+```
+
+with that you would do something like this:
+
+!!! Scripts
+    === "Shorten Script"
+    ```lua
+    bindAura(assets.SuperSaiyanPotatoAura, data.UpperTorso, true)
+    bindAuraSound(assets.SuperSaiyanPotatoSound, data.UpperTorso, true)
+    ```
+    === "Full Script"
+        ```lua
+            modes["Super Saiyan Potato"] = function(player, toggle, data, modeNumber, animation, flying)
+            if toggle then
+                animationBind(animation)
+                if flying == false then
+                    task.spawn(function()
+                        Rocks(20, data)
+                    )
+                end
+
+                bindAura(assets.SuperSaiyanPotatoAura, data.UpperTorso, true)
+                bindAuraSound(assets.SuperSaiyanPotatoSound, data.UpperTorso, true)
+            else
+            end
+        end
+        ```
+
+
+this basically will grab the Aura and the Sound instance from the **assets** (assets is a variable inside the script that aims directly to the `game.ServerStorage.Skills.Assets`) and show/play it on the player character.
+
+Now tell me, what's more important than visual? Yes! Strength! So now we will use the ``healthRatio()`` function, it needs the parameters
+
+!!! Parameters
+    ```lua
+        healthRatio(PlayerHumanoid, BaseHP * modeBoostModule[modeNumber])
+    ```
+    ***Theses parameters are:***
+
+    - **PlayerHumanoid** = The player humanoid.
+    - **BaseHP** = The default player hp, which is always 100.
+    - **modeNumber** = The parameter sent by the client.
+
+The results in your script should be like this:
+
+!!! Script
+    === "Full Script"
+        ```lua
+        modes["Super Saiyan Potato"] = function(player, toggle, data, modeNumber, animation, flying)
+            if toggle then
+                animationBind(animation)
+                if flying == false then
+                    task.spawn(function()
+                        Rocks(20, data)
+                    )
+                end
+
+                bindAura(assets.SuperSaiyanPotatoAura, data.UpperTorso, true)
+                bindAuraSound(assets.SuperSaiyanPotatoSound, data.UpperTorso, true)
+                healthRatio(data.Humanoid, 100 * modeBoostModule[modeNumber])
+            else
+            end
+        end
+        ```
+    === "Shorten Script"
+        ```lua
+        healthRatio(data.Humanoid, 100 * modeBoostModule[modeNumber])
+        ```
+
+Well, now we need to stop the animation of charging, right? So let's use a simple and quick connection using **:Stop**.
+
+!!! Script
+    === "Shorten Script"
+        ```lua
+        animation:Stop(.4) -- This will stop the current animation and waits .4 seconds until running the below code.
+        ```
+
+    === "Full Script"
+        ```lua
+        modes["Super Saiyan Potato"] = function(player, toggle, data, modeNumber, animation, flying)
+            if toggle then
+                animationBind(animation)
+                if flying == false then
+                    task.spawn(function()
+                        Rocks(20, data)
+                    )
+                end
+
+                bindAura(assets.SuperSaiyanPotatoAura, data.UpperTorso, true)
+                bindAuraSound(assets.SuperSaiyanPotatoSound, data.UpperTorso, true)
+                healthRatio(data.Humanoid, 100 * modeBoostModule[modeNumber])
+                animation:Stop(.4)
+            else
+            end
+        end
+        ```
+
+***Ta-da!*** We finished doing the basic transformation tutorial, you can now set up some effects on it as you please, as Explosion() and etc... ***I'd recommend you read a bit of others transformations script to get a lil idea of what to do.***
+
+---
+
+##### Untransforming Script
+
+Well, sometimes players want's to untransform to pvp, hangout or test other forms, right? Remember the first **else** on the script, that one right before the end? Well, there is where the magic starts.
+
+open a line between the **else** and the **end**, like this:
+
+```lua
+    else
+        --Line
+    end
+```
+
+We will start writing right inside that line the untransformation script.
+
+The first thing that we will do while the player untransform is removing their aura and aura sound, right? So let's do this: ``bindAura(nil, data.UpperTorso, false)``, since we are sending nil as the aura and false as the toggle, then the bindAura function will run a code to delete the aura inside of the player.
+
+As the sound we would use the same thing. ``bindAuraSound(nil, data.UpperTorso, false)``, easy peazy lemon squeazy.
+
+After removing the aura we will do what? Well, change the player strength back to the base form. Get the same function of healthRatio but this time it will be easier, just insert a ``healthRatio(data.Humanoid, 100)``, easy win.
+
+After doing theses things, the script should look like this:
+
+!!! Script
+    === "Shorten Script"
+        ```lua
+        else
+            bindAura(nil, data.UpperTorso, false)
+            bindAuraSound(nil, data.UpperTorso, false)
+            healthRatio(data.Humanoid, 100)
+        end
+        ```
+   
+    === "Full Script"
+        ```lua
+        modes["Super Saiyan Potato"] = function(player, toggle, data, modeNumber, animation, flying)
+            if toggle then
+                animationBind(animation)
+                if flying == false then
+                    task.spawn(function()
+                        Rocks(20, data)
+                    )
+                end
+
+                bindAura(assets.SuperSaiyanPotatoAura, data.UpperTorso, true)
+                bindAuraSound(assets.SuperSaiyanPotatoSound, data.UpperTorso, true)
+                healthRatio(data.Humanoid, 100 * modeBoostModule[modeNumber])
+                animation:Stop(.4)
+            else
+                bindAura(nil, data.UpperTorso, false)
+                bindAuraSound(nil, data.UpperTorso, false)
+                healthRatio(data.Humanoid, 100)
+            end
+        end
+        ```
+
+There is it, now the player should be able to transform into the new form!
